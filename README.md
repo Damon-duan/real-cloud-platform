@@ -1,6 +1,6 @@
-# vue-lesson
+# real time cloud paltform
 
-> A Vue.js project
+> This is a cloud paltform
 
 ## Build Setup
 
