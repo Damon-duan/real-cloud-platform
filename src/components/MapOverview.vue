@@ -10,6 +10,12 @@ export default {
     return {
       msg: 'Welcome to Your Vue.js App'
     }
+  },
+  mounted () {
+    this.$http.post('/news', 'type=top&key=123456').then(res => {
+      console.log(res.data)
+      this.newsListShow = res.data.data
+    })
   }
 }
 </script>

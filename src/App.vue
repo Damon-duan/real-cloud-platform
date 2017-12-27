@@ -2,7 +2,7 @@
   <div id="app">
     <nav class="navbar top-navigation" role="navigation">
       <ul class="nav navbar-top-links navbar-left">
-        <li v-link="{ path: '/map-overview', activeClass: 'active' }">
+        <li v-link="{ path: '/', activeClass: 'active' }">
           <a>
             <i class="fa fa-map-marker"></i>
             <span class="nav-label">实时监测</span>
