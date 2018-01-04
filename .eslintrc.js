@@ -8,6 +8,7 @@ module.exports = {
   },
   env: {
     browser: true,
+    jquery: true
   },
   // https://github.com/standard/standard/blob/master/docs/RULES-en.md
   extends: 'standard',
@@ -20,6 +21,9 @@ module.exports = {
     // allow async-await
     'generator-star-spacing': 'off',
     // allow debugger during development
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off'
+    'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
+    "no-console": "off",
+    "no-undef": "off",                            // 变量未定义
+    "no-unused-vars": "off",                      // 变量定义后未使用
   }
 }

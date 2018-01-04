@@ -581,13 +581,13 @@ body.canvas-menu.mini-navbar nav.navbar-static-side {
 
 .top-navigation .nav>li>a {
     padding: 15px 20px;
-    color: #676a6c;
+    color: #9fbad6;
 }
 
 .top-navigation .nav>li a:hover,
 .top-navigation .nav>li a:focus {
-    background: #fff;
-    color: #1ab394;
+    background: #2aa6fe;
+    color: #ffffff;
 }
 
 .top-navigation .nav>li.active {

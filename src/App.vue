@@ -2,56 +2,53 @@
   <div id="app">
     <nav class="navbar top-navigation" role="navigation">
       <ul class="nav navbar-top-links navbar-left">
-        <li v-link="{ path: '/', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/', activeClass: 'active' }">
             <i class="fa fa-map-marker"></i>
             <span class="nav-label">实时监测</span>
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/realTimeData', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/realTimeData', activeClass: 'active' }">
             <i class="fa fa-bar-chart-o"></i>
             <span class="nav-label">实时数据</span>
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/rank', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/rank', activeClass: 'active' }">
             <i class="fa fa-sort-amount-desc"></i>
             <span class="nav-label">排行榜</span>
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/alarm', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/alarm', activeClass: 'active' }">
             <i class="fa fa-bell"></i>
             <span class="nav-label">告警</span>
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/exportData', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/exportData', activeClass: 'active' }">
             <i class="fa fa-cloud-download"></i>
             <span class="nav-label">数据导出</span>
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/devices', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/devices', activeClass: 'active' }">
             <i class="fa fa-sitemap"></i>
             <span class="nav-label">设备管理</span>
-
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/userManager', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/userManager', activeClass: 'active' }">
             <i class="fa fa-users"></i>
             <span class="nav-label">用户管理</span>
-
-          </a>
+          </router-link>
         </li>
-        <li v-link="{ path: '/userSetting', activeClass: 'active' }">
-          <a>
+        <li>
+          <router-link :to="{ path: '/userSetting', activeClass: 'active' }">
             <i class="fa fa-user"></i>
             <span class="nav-label">用户中心</span>
-
-          </a>
+          </router-link>
         </li>
       </ul>
       <ul class="nav navbar-top-links navbar-right">
@@ -65,7 +62,7 @@
         </li>
       </ul>
     </nav>
-    <router-view/>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -80,12 +77,16 @@ export default {
   font-family: "Microsoft YaHei", "Arial", "SimSun";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  color: #9fbad6;
 }
 .navbar {
   position: fixed;
   width: 100%;
   border-bottom: 1px solid #ddd;
+  background-color: #061b32;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
+  z-index: 10;
 }
 </style>
