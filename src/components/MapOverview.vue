@@ -99,26 +99,78 @@
 </template>
 
 <script>
-export default {
-  name: 'MapOverview',
-  data () {
-    return {
-      msg: '1313212'
+  let map = null
+  let statusMarkers = []
+  export default {
+    name: 'MapOverview',
+    data () {
+      return {
+        msg: '1313212',
+        vm: {}
+      }
+    },
+    mounted () {
+      let _this = this
+      $('.map-container').height($('body').height() - 51)
+      _this.$http.get('/user/devices').then(res => {
+        let result = res.data
+        console.log(result)
+        if (result.success) {
+          _this.vm.devices = result.data
+        } else {
+          _this.vm.devices = []
+        }
+
+        map = new AMap.Map('map-container', {
+          resizeEnable: true,
+          zoom: 5,
+          center: [116.480983, 40.0958]
+        })
+
+        for (let m = 0; m < _this.vm.devices.length; m++) {
+          _this.addMarker(_this.vm.devices[m], _this)
+        }
+        // 地图自适应地图的markers
+        map.setFitView()
+      })
+    },
+    methods: {
+      addMarker: (device, This) => {
+        let _this = This
+        if (!device.lng || !device.lat) {
+          return
+        }
+        let lnglat = new AMap.LngLat(device.lng, device.lat)
+        let marker = new AMap.Marker({
+          extData: {
+            id: device.device_id,
+            status: device.online_ind
+          },
+          title: device.name_sn,
+          map: map,
+          position: lnglat,
+          icon: device.online_ind ? 'src/assets/images/online.png' : 'src/assets/images/offline.png'
+        })
+        statusMarkers.push(marker)
+
+        AMap.event.addListener(marker, 'click', () => {
+          _this.vm.device_id = device.device_id
+          _this.$http.get('/data/rt/' + device.device_id).then(res => {
+            let infoWindow = null, sContent = '', result = res.data
+            if (result.success) {
+              sContent = createInfoContent(_this.vm.getDeviceById(device.device_id), result.data)
+            }
+            infoWindow = new AMap.InfoWindow({
+              isCustom: true, // 使用自定义窗体
+              content: createInfoWindow('ID:' + device.device_id, sContent),
+              offset: new AMap.Pixel(14, -53)
+            })
+            infoWindow.open(map, marker.getPosition())
+          })
+        })
+      }
     }
-  },
-  mounted () {
-    $('.map-container').height($('body').height() - 51)
-    let map = new AMap.Map('map-container', {
-      resizeEnable: true,
-      zoom: 5,
-      center: [116.480983, 40.0958]
-    })
-//    this.$http.post('/news', 'type=top&key=123456').then(res => {
-//      console.log(res.data)
-//      this.newsListShow = res.data.data
-//    })
   }
-}
 </script>
 
 
@@ -179,7 +231,7 @@ export default {
     right: -15px;
     top: 50%;
     z-index: 201;
-    background: url(/static/img/dragtool.png) no-repeat;
+    background: #000;
     width: 15px;
     height: 64px;
     display: none;
