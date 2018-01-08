@@ -99,6 +99,7 @@
 </template>
 
 <script>
+  import asenConfig from '@/assets/js/asenConfig'
   let map = null
   let statusMarkers = []
   export default {
@@ -155,10 +156,10 @@
 
         AMap.event.addListener(marker, 'click', () => {
           _this.vm.device_id = device.device_id
-          _this.$http.get('/data/rt/' + device.device_id).then(res => {
-            let infoWindow = null, sContent = '', result = res.data
+          _this.$http.get('/data/rt').then(res => {
+            let infoWindow, sContent = '', result = res.data
             if (result.success) {
-              sContent = createInfoContent(_this.vm.getDeviceById(device.device_id), result.data)
+              sContent = _this.createInfoContent(_this.vm.getDeviceById(device.device_id), result.data)
             }
             infoWindow = new AMap.InfoWindow({
               isCustom: true, // 使用自定义窗体
@@ -168,6 +169,60 @@
             infoWindow.open(map, marker.getPosition())
           })
         })
+      },
+      createInfoContent: (device, rtData) => {
+        let sContent = ''
+        if (device.online_ind) {
+          sContent += '<div class="info-content">'
+          sContent += '<div class="info-item">'
+          sContent += '<span class="info-name">名称</span>'
+          sContent += '<span>' + device.name_sn + '</span>'
+          sContent += '</div>'
+          sContent += '<div class="info-item">'
+          sContent += '<span class="info-name">更新时间</span>'
+          sContent += '<span class="info-value">' + rtData.rt_data.datetime + '</span>'
+          sContent += '</div>' + this.createSensorContent(rtData.rt_data) + '</div>'
+        } else {
+          sContent += '<div class="info-content">'
+          sContent += '<span class="info-name">名称</span>'
+          sContent += '<span>' + device.name_sn + '</span>'
+          sContent += '</div>'
+          sContent += '<div class="info-item">'
+          sContent += '<span class="info-name">状态</span>'
+          sContent += '<span class="text-danger">离线</span>'
+          sContent += '</div>'
+          sContent += '</div>'
+        }
+        return sContent
+      },
+      createSensorContent: (data) => {
+        let html = ''
+        for (let name in data) {
+          if (data.hasOwnProperty(name)) {
+            if (['device_id', 'datetime'].indexOf(name) !== -1) {
+              continue
+            }
+            if (asenConfig.getDisplayValue(data[name]) !== 0) {
+              if (!asenConfig.getDisplayValue(data[name]) || asenConfig.getDisplayValue(data[name]) === '无数据') {
+                continue
+              }
+            }
+            html += '<div class="info-item">'
+            html += '<span class="info-name">' + asenConfig.getSensorName(name) + '</span>'
+            html += '<span class="info-value">' + asenConfig.getDisplayValue(data[name], name) + '</span>'
+            html += '<span class="info-unit">' + asenConfig.getUnit(name) + '</span>'
+            html += '</div>'
+          }
+        }
+        return html
+      },
+      getDeviceById: (id) => {
+        console.log(this)
+//        for (let i = 0; i < this.vm.devices.length; i++) {
+//          if (this.vm.devices[i].device_id === id) {
+//            return this.vm.devices[i]
+//          }
+//        }
       }
     }
   }
