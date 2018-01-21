@@ -103,5 +103,119 @@ const rt = {
   'success': true
 }
 
+const monitor = {
+  'code': 1,
+  'data': [
+    {
+      'CH2O': -1000.0,
+      'CO': -1000.0,
+      'CO2': -1000.0,
+      'H2S': -1000.0,
+      'NH3': -1000.0,
+      'NO2': -1000.0,
+      'O2': -1000.0,
+      'O3': -1000.0,
+      'SO2': -1000.0,
+      'VOC': -1000.0,
+      'datetime': '2018-01-02 00:47:48',
+      'device_id': '2017053100100001',
+      'humidity': 62.2,
+      'illum': -1000.0,
+      'name_sn': '\u5965\u65af\u6069\u4e00\u697c \u5927\u95e8\u6837\u673a',
+      'negoxygen': -1000.0,
+      'noise': 70.5,
+      'online_ind': 0,
+      'p10': 97.0,
+      'p25': 86.0,
+      'photosynthesis': -1000.0,
+      'pressure': -1000.0,
+      'radiation': -1000.0,
+      'rainfall': -1000.0,
+      'soilhumidity': -1000.0,
+      'soiltemp': -1000.0,
+      'temp': 17.3,
+      'tsp': 108.0,
+      'ultravioletrays': -1000.0,
+      'winddirection': '5',
+      'windspeed': 1.0
+    },
+    {
+      'CH2O': -1000.0,
+      'CO': -1000.0,
+      'CO2': -1000.0,
+      'H2S': -1000.0,
+      'NH3': -1000.0,
+      'NO2': -1000.0,
+      'O2': -1000.0,
+      'O3': -1000.0,
+      'SO2': -1000.0,
+      'VOC': -1000.0,
+      'datetime': '2018-01-20 21:17:04',
+      'device_id': '2017102600100015',
+      'humidity': 52.2,
+      'illum': -1000.0,
+      'name_sn': '\u897f\u5b89\u4e34\u6f7c\u533a\u5730\u94c19\u53f7\u7ebf\u5de5\u7a0bTJSG7\u68071',
+      'negoxygen': -1000.0,
+      'noise': 66.8,
+      'online_ind': 1,
+      'p10': 320.0,
+      'p25': 206.0,
+      'photosynthesis': -1000.0,
+      'pressure': -1000.0,
+      'radiation': -1000.0,
+      'rainfall': -1000.0,
+      'soilhumidity': -1000.0,
+      'soiltemp': -1000.0,
+      'temp': 7.5,
+      'tsp': -1000.0,
+      'ultravioletrays': -1000.0,
+      'winddirection': '0',
+      'windspeed': 1.4
+    },
+    {
+      'CH2O': -1000.0,
+      'CO': -1000.0,
+      'CO2': -1000.0,
+      'H2S': -1000.0,
+      'NH3': -1000.0,
+      'NO2': -1000.0,
+      'O2': -1000.0,
+      'O3': -1000.0,
+      'SO2': -1000.0,
+      'VOC': -1000.0,
+      'datetime': '2018-01-20 21:17:38',
+      'device_id': '2017102600100058',
+      'humidity': 58.7,
+      'illum': -1000.0,
+      'name_sn': '\u897f\u5b89\u9884\u9632\u6d4b\u8bd5',
+      'negoxygen': -1000.0,
+      'noise': 71.3,
+      'online_ind': 1,
+      'p10': 74.0,
+      'p25': 48.0,
+      'photosynthesis': -1000.0,
+      'pressure': -1000.0,
+      'radiation': -1000.0,
+      'rainfall': -1000.0,
+      'soilhumidity': -1000.0,
+      'soiltemp': -1000.0,
+      'temp': 22.7,
+      'tsp': -1000.0,
+      'ultravioletrays': -1000.0,
+      'winddirection': '0',
+      'windspeed': 1.1
+    }
+  ],
+  'success': true
+}
+
+const alarm = {
+  'code': 1,
+  'data': [],
+  'success': true
+}
+
 Mock.mock('/user/devices', /post|get/i, devices) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
 Mock.mock('/data/rt', /post|get/i, rt) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
+Mock.mock('/monitor', /post|get/i, monitor) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
+Mock.mock('/monitor/alarm', /post|get/i, alarm) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据

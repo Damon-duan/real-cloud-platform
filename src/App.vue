@@ -15,11 +15,11 @@
   }
 </script>
 
-<style>
-#app {
-  font-family: "Microsoft YaHei", "Arial", "SimSun";
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #9fbad6;
-}
+<style lang="scss">
+  #app {
+    font-family: "Microsoft YaHei", "Arial", "SimSun";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color: $color1;
+  }
 </style>

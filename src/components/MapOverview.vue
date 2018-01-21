@@ -1,9 +1,8 @@
 <template>
   <div class="container-fluid">
     <div class="map-container" id="map-container"></div>
-    <div id="layerHolder" class="layerHolder" style="width: 348px;">
-      <a id="dragtool" class="closed"></a>
-
+    <div id="layerHolder" class="layerHolder" :class="{closed: btn}">
+      <a id="dragtool" @click="tabPanel()">&gt;</a>
       <div class="holder-heading">
         <h5 class="holder-title">设备列表</h5>
       </div>
@@ -18,8 +17,8 @@
             </div>
             <div class="error-panel">
               共有
-              <span id="error-total"></span> 条数据,当前页有
-              <span id="error-current"></span> 条数据在线
+              <span id="error-total">{{devices.length}}</span> 条数据,当前页有
+              <span id="error-current">{{this.getOnlinePoints().length}}</span> 条数据在线
             </div>
             <div id="data-panel" class="ps-container ps-theme-default">
 
@@ -35,37 +34,36 @@
               <div class="tablewrapper" style="display: block;">
                 <table class="table-group" cellpadding="0" cellspacing="0">
                   <thead class="table-head">
-                  <tr id="tr-head">
-                    <th style="min-width: 50px;">ID</th>
-                    <th style="min-width: 120px;">名称</th>
-                    <th>状态</th>
-                    <th>描述</th>
-                    <th class="item-longitude">经度</th>
-                    <th class="item-latitude">纬度</th>
-                    <th class="item-address">地址</th>
-                  </tr>
+                    <tr id="tr-head">
+                      <th style="min-width: 50px;">ID</th>
+                      <th style="min-width: 120px;">名称</th>
+                      <th>状态</th>
+                      <th>描述</th>
+                      <th class="item-longitude">经度</th>
+                      <th class="item-latitude">纬度</th>
+                      <th class="item-address">地址</th>
+                    </tr>
                   </thead>
                   <tbody>
-                  <tr>
-                    <td data-type="id"></td>
-                    <td class="item-name" data-type="name"></td>
-                    <td data-type="online_ind">
-
-                    </td>
-                    <td></td>
-                    <td class="item-longitude" data-type="geo-x"></td>
-                    <td class="item-latitude" data-type="geo-y"></td>
-                    <td class="item-address" data-type="address">
-                      <div></div>
-                    </td>
-                  </tr>
+                    <tr v-for="device in devices" @click="openPointInfoWindow(device)">
+                      <td data-type="id">{{device.device_id}}</td>
+                      <td class="item-name" data-type="name">{{device.name_sn}}</td>
+                      <td data-type="online_ind" :class="{'text-danger': !device.online_ind, 'text-success': device.online_ind}">
+                        {{device.online_ind ? '在线' : '离线'}}
+                      </td>
+                      <td>{{device.description}}</td>
+                      <td class="item-longitude" data-type="geo-x">{{device.lng}}</td>
+                      <td class="item-latitude" data-type="geo-y">{{device.lat}}</td>
+                      <td class="item-address" data-type="address">
+                        <div>{{device.address}}</div>
+                      </td>
+                    </tr>
                   </tbody>
                   <tbody class="error-group" style="display:none"></tbody>
                 </table>
               </div>
             </div>
-            <div id="pager" style="display: none;">
-            </div>
+            <div id="pager" style="display: none;"></div>
           </div>
         </div>
       </div>
@@ -73,53 +71,70 @@
     <div class="map-footer">
       <div class="map-filter">
         <div class="btn-group" role="group" aria-label="...">
-          <button type="button" class="btn btn-default text-info">全部</button>
-          <button type="button" class="btn btn-default text-success">在线</button>
-          <button type="button" class="btn btn-default text-warn">离线</button>
-          <button type="button" class="btn btn-default text-danger">报警 <span class="text-danger badge alarm-badge"></span></button>
+          <button @click="showStatusMarkers(-1)" type="button" class="btn btn-default text-info">全部</button>
+          <button @click="showStatusMarkers(1)" type="button" class="btn btn-default text-success">在线</button>
+          <button @click="showStatusMarkers(0)" type="button" class="btn btn-default text-warn">离线</button>
+          <button @click="clickShowAlarm()" type="button" class="btn btn-default text-danger">报警 <span
+            class="text-danger badge alarm-badge">{{alarms.length ? alarms.length : ''}}</span></button>
           <div class="btn-group dropup" role="group">
             <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
               参数
               <span class="caret"></span>
             </button>
             <ul class="dropdown-menu">
-              <li>
-                <a>
-                  <i class="icon iconfont"></i>
+              <li v-for="data in allSensors">
+                <a @click="showSensorMarkers(data.id)">
+                  <i class="icon iconfont" :class="data.icon"></i> {{data.name}}
                 </a>
               </li>
             </ul>
           </div>
         </div>
       </div>
-      <div class="map-message text-danger">{{msg}}</div>
+      <div class="map-message text-danger"></div>
     </div>
   </div>
-
 </template>
 
 <script>
   import asenConfig from '@/assets/js/asenConfig'
+  import dateUtil from '@/assets/js/DateUtil'
   let map = null
+  let deviceId = asenConfig.device_id
   let statusMarkers = []
+  let sensorMarkers = []
+  let realTimeInterval
+  let alarmInterval
+  let monitorTimer = 5000
+  let latestMonitor = []
+  let monitorPromise
+  let alarmPromise
+  let isShowingAlarm = false
   export default {
     name: 'MapOverview',
     data () {
       return {
-        msg: '1313212',
-        vm: {}
+        devices: [],
+        device_id: deviceId,
+        allSensors: asenConfig.allSensors,
+        alarms: [],
+        btn: 0
       }
     },
+    beforeDestroy () {
+      realTimeInterval && clearInterval(realTimeInterval)
+      alarmInterval && clearInterval(alarmInterval)
+      statusMarkers = []
+      sensorMarkers = []
+    },
     mounted () {
-      let _this = this
       $('.map-container').height($('body').height() - 51)
-      _this.$http.get('/user/devices').then(res => {
+      this.$http.get('/user/devices').then(res => {
         let result = res.data
-        console.log(result)
         if (result.success) {
-          _this.vm.devices = result.data
+          this.devices = result.data
         } else {
-          _this.vm.devices = []
+          this.devices = []
         }
 
         map = new AMap.Map('map-container', {
@@ -128,16 +143,129 @@
           center: [116.480983, 40.0958]
         })
 
-        for (let m = 0; m < _this.vm.devices.length; m++) {
-          _this.addMarker(_this.vm.devices[m], _this)
+        for (let i = 0; i < this.devices.length; i++) {
+          this.addMarker(this.devices[i])
         }
         // 地图自适应地图的markers
         map.setFitView()
       })
+      this.getRealtimeData()
+      this.getAlarmData()
     },
     methods: {
-      addMarker: (device, This) => {
-        let _this = This
+      showSensorMarkers (sensor) {
+        isShowingAlarm = false
+        if (!map && !sensor) {
+          return
+        }
+        if (statusMarkers && statusMarkers.length) {
+          statusMarkers.map(marker => {
+            marker.hide()
+          })
+        }
+        if (sensorMarkers && sensorMarkers.length) {
+          map.remove(sensorMarkers)
+        }
+        monitorPromise.then(() => {
+          console.log(latestMonitor)
+          if (latestMonitor && latestMonitor.data.length && this.devices) {
+            latestMonitor.data.map(item => {
+              this.addSensorMarker(
+                this.getDeviceById(item.device_id),
+                sensor,
+                item[sensor]
+              )
+            })
+          }
+        })
+      },
+      clickShowAlarm () {
+        isShowingAlarm = true
+        this.showAlarm()
+      },
+      showAlarm () {
+        if (sensorMarkers && sensorMarkers.length) {
+          map.remove(sensorMarkers)
+        }
+        if (statusMarkers && statusMarkers.length) {
+          statusMarkers.map(marker => {
+            marker.hide()
+          })
+
+          statusMarkers.filter(marker => {
+            return marker.getExtData().isAlarm === true
+          }).map(marker => {
+            marker.show()
+          })
+        }
+      },
+      showStatusMarkers (status) {
+        isShowingAlarm = false
+        if (!map) {
+          return
+        }
+        if (sensorMarkers && sensorMarkers.length) {
+          map.remove(sensorMarkers)
+        }
+        if (statusMarkers && statusMarkers.length) {
+          statusMarkers.map(marker => {
+            marker.hide()
+          })
+          if (status === -1) {
+            statusMarkers.map(marker => {
+              marker.show()
+            })
+            return
+          }
+
+          statusMarkers.filter(marker => {
+            return marker.getExtData().status === status
+          }).map(marker => {
+            marker.show()
+          })
+        }
+      },
+      addSensorMarker (device, sensor, value) {
+        if (!device.lng || !device.lat) {
+          return
+        }
+
+        let lnglat = new AMap.LngLat(device.lng, device.lat)
+        let displayValue = asenConfig.getDisplayValue(value, sensor)
+        let displayItem = displayValue + ' ' + asenConfig.getUnit(sensor)
+        let content = '<div class="amap-ui-district-cluster-marker" title="' + device.name_sn + '"><span class="amap-ui-district-cluster-marker-title">' + asenConfig.getSensorName(sensor) + '</span><span class="amap-ui-district-cluster-marker-body success">' + displayItem + '</span></div>'
+        if (displayValue === '无数据') {
+          content = '<div class="amap-ui-district-cluster-marker" title="' + device.name_sn + '"><span class="amap-ui-district-cluster-marker-title">' + asenConfig.getSensorName(sensor) + '</span><span class="amap-ui-district-cluster-marker-body">' + displayValue + '</span></div>'
+        }
+        let marker = new AMap.Marker({
+          extData: {
+            id: device.device_id
+          },
+          title: device.name_sn,
+          map: map,
+          position: lnglat,
+          content: content // 自定义点标记覆盖物内容
+        })
+        sensorMarkers.push(marker)
+
+        AMap.event.addListener(marker, 'click', function () {
+          this.device_id = device.device_id
+          this.$http.get('/data/rt/' + device.device_id).then(result => {
+            let infoWindow = null
+            let sContent = ''
+            if (result.success) {
+              sContent = this.createInfoContent(this.getDeviceById(device.device_id), result.data)
+            }
+            infoWindow = new AMap.InfoWindow({
+              isCustom: true, // 使用自定义窗体
+              content: this.createInfoWindow('ID:' + device.device_id, sContent),
+              offset: new AMap.Pixel(14, -53)
+            })
+            infoWindow.open(map, marker.getPosition())
+          })
+        })
+      },
+      addMarker (device) {
         if (!device.lng || !device.lat) {
           return
         }
@@ -153,24 +281,25 @@
           icon: device.online_ind ? 'src/assets/images/online.png' : 'src/assets/images/offline.png'
         })
         statusMarkers.push(marker)
-
         AMap.event.addListener(marker, 'click', () => {
-          _this.vm.device_id = device.device_id
-          _this.$http.get('/data/rt').then(res => {
-            let infoWindow, sContent = '', result = res.data
+          this.device_id = device.device_id
+          this.$http.get('/data/rt').then(res => {
+            let infoWindow
+            let sContent = ''
+            let result = res.data
             if (result.success) {
-              sContent = _this.createInfoContent(_this.vm.getDeviceById(device.device_id), result.data)
+              sContent = this.createInfoContent(this.getDeviceById(device.device_id), result.data)
             }
             infoWindow = new AMap.InfoWindow({
               isCustom: true, // 使用自定义窗体
-              content: createInfoWindow('ID:' + device.device_id, sContent),
+              content: this.createInfoWindow('ID:' + device.device_id, sContent),
               offset: new AMap.Pixel(14, -53)
             })
             infoWindow.open(map, marker.getPosition())
           })
         })
       },
-      createInfoContent: (device, rtData) => {
+      createInfoContent (device, rtData) {
         let sContent = ''
         if (device.online_ind) {
           sContent += '<div class="info-content">'
@@ -195,7 +324,7 @@
         }
         return sContent
       },
-      createSensorContent: (data) => {
+      createSensorContent (data) {
         let html = ''
         for (let name in data) {
           if (data.hasOwnProperty(name)) {
@@ -216,27 +345,134 @@
         }
         return html
       },
-      getDeviceById: (id) => {
-        console.log(this)
-//        for (let i = 0; i < this.vm.devices.length; i++) {
-//          if (this.vm.devices[i].device_id === id) {
-//            return this.vm.devices[i]
-//          }
-//        }
+      getDeviceById (id) {
+        for (let i = 0; i < this.devices.length; i++) {
+          if (this.devices[i].device_id === id) {
+            return this.devices[i]
+          }
+        }
+      },
+      createInfoWindow (title, content) {
+        let info = document.createElement('div')
+        info.className = 'info'
+
+        // 可以通过下面的方式修改自定义窗体的宽高
+        // info.style.width = "400px";
+        // 定义顶部标题
+        let top = document.createElement('div')
+        let titleD = document.createElement('div')
+        let closeX = document.createElement('img')
+        top.className = 'info-top'
+        titleD.innerHTML = title
+        closeX.src = 'http://webapi.amap.com/images/close2.gif'
+        closeX.onclick = this.closeInfoWindow
+
+        top.appendChild(titleD)
+        top.appendChild(closeX)
+        info.appendChild(top)
+
+        // 定义中部内容
+        let middle = document.createElement('div')
+        middle.className = 'info-middle'
+        middle.style.backgroundColor = 'white'
+        middle.innerHTML = content
+        info.appendChild(middle)
+
+        // 定义底部内容
+        let bottom = document.createElement('div')
+        bottom.className = 'info-bottom'
+        bottom.style.position = 'relative'
+        bottom.style.top = '0px'
+        bottom.style.margin = '0 auto'
+        var sharp = document.createElement('img')
+        sharp.src = 'http://webapi.amap.com/images/sharp.png'
+        bottom.appendChild(sharp)
+        info.appendChild(bottom)
+        return info
+      },
+      closeInfoWindow () {
+        map.clearInfoWindow()
+      },
+      getOnlinePoints () {
+        return this.devices.filter(device => {
+          return device.online_ind === true
+        })
+      },
+      openPointInfoWindow (device) {
+        let markers = map.getAllOverlays('marker')
+        for (let i = 0; i < markers.length; i++) {
+          var extData = markers[i].getExtData()
+          if (extData && extData.id === device.device_id) {
+            this.device_id = device.device_id
+            AMap.event.trigger(markers[i], 'click')
+            break
+          }
+        }
+        if (device.lng && device.lat) {
+          map.panTo(new AMap.LngLat(device.lng, device.lat))
+        }
+      },
+      getRealtimeData () {
+        let _this = this
+        realTimeInterval = setInterval(() => {
+          monitorPromise = _this.$http.get('/monitor').then(result => {
+            if (result && result.data.success) {
+              latestMonitor = result.data
+            }
+          })
+        }, monitorTimer)
+      },
+      getAlarmData () {
+        let _this = this
+        _this.loadAlarm()
+        alarmInterval = setInterval(() => {
+          _this.loadAlarm()
+        }, monitorTimer)
+      },
+      loadAlarm () {
+        alarmPromise = this.$http.get('/monitor/alarm').then(result => {
+          if (result && result.success) {
+            this.alarms = result.data
+            statusMarkers.map(marker => {
+              marker.setAnimation('AMAP_ANIMATION_NONE')
+              let extData = marker.getExtData()
+              extData['isAlarm'] = false
+              marker.setExtData(extData)
+            })
+            if (this.alarms && this.alarms.length) {
+              this.alarms.map(alarm => {
+                var marker = statusMarkers.find(item => {
+                  return item.getExtData().id === alarm.device_id
+                })
+                if (marker) {
+                  marker.setAnimation('AMAP_ANIMATION_BOUNCE')
+                  let extData = marker.getExtData()
+                  extData['isAlarm'] = true
+                  marker.setExtData(extData)
+                }
+              })
+              isShowingAlarm && this.showAlarm()
+            }
+          }
+        })
+      },
+      tabPanel () {
+        this.btn = !this.btn
       }
     }
   }
 </script>
 
-
-<style scoped lang="scss">
+<style lang="scss">
   .layerHolder {
     position: absolute;
     top: 50px;
-    left: 0;
-    width: 368px;
+    left: -865px;
+    bottom: 34px;
+    width: 865px;
     z-index: 200;
-    background-color: rgba(2, 21, 41, 0.9);
+    background-color: $bg1;
+    @include transition(0.3s);
     .holder-title {
       line-height: 20px;
       height: 20px;
@@ -244,14 +480,20 @@
       margin: 10px 0;
       font-size: 14px;
       color: inherit;
-      font-family: \\5FAE\8F6F\96C5\9ED1
     }
     .holder-heading {
       overflow: hidden;
       position: relative;
       color: #fff;
-      background-color: #335891;
+      background-color: $bg2;
       padding: 0 15px;
+    }
+    .holder-body {
+      position: absolute;
+      left: 0;
+      top: 40px;
+      bottom: 0;
+      width: 100%;
     }
     p.table-id {
       margin-top: 10px;
@@ -273,6 +515,21 @@
       width: 20px;
       height: 20px
     }
+    .tablewrapper {
+      padding-left: 10px;
+      padding-right: 10px;
+    }
+    &.closed {
+      left: 0;
+    }
+  }
+
+  #data-panel {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    bottom: 0;
+    width: 100%;
   }
 
   .width-transition {
@@ -286,22 +543,13 @@
     right: -15px;
     top: 50%;
     z-index: 201;
-    background: #000;
+    background: $bg1;
     width: 15px;
     height: 64px;
-    display: none;
-    &.closed {
-      background-position: 0 -132px;
-      &:hover {
-        background-position: 0 -198px
-      }
-    }
-    &.opened {
-      background-position: 0 0;
-      &:hover {
-        background-position: 0 -67px
-      }
-    }
+    line-height: 64px;
+    font-family: 'SimSun';
+    text-align: center;
+    color: $color1;
   }
 
   #mymap-name {
@@ -343,8 +591,12 @@
     box-shadow: 2px 0 3px 0 rgba(0, 0, 0, .12)
   }
 
-  div.tab-content .tab-panel {
-    position: relative
+  div.tab-content {
+    height: 100%;
+    .tab-panel {
+      position: relative;
+      height: 100%;
+    }
   }
 
   .loadingoverlayer {
@@ -379,50 +631,89 @@
     padding: 5px
   }
 
-  .table-group #tr-head .serial {
-    padding-left: 13px
-  }
-
   .table-group {
     width: 100%;
     white-space: nowrap;
+    border-top: 1px solid $color1;
+    border-left: 1px solid $color1;
     .wrap {
       width: 52px;
       display: inline-block;
       margin-right: 13px
     }
-    .table-head td {
-      background-color: #f8f8f8
+    tbody {
+      tr {
+        &:hover, &.selected {
+          background: rgba(0, 145, 255, .05);
+          cursor: pointer;
+        }
+        &.selected {
+          color: #0091ff;
+        }
+        &.offline {
+          color: #aaaaaa;
+        }
+      }
+    }
+    .table-head {
+      th {
+        background-color: $bg2;
+        height: 30px;
+        line-height: 30px;
+        border-bottom: 1px solid $color1;
+        padding: 0 6px;
+        border-right: 1px solid $color1;
+        font-weight: 400;
+      }
+      td {
+        background-color: $color1
+      }
+    }
+    .item-createTime, .item-updateTime {
+      padding-right: 15px
+    }
+    td {
+      &.error {
+        background-color: #fbcece
+      }
+      height: 30px;
+      line-height: 30px;
+      padding: 0 6px;
+      border-bottom: 1px solid $color1;
+      border-right: 1px solid $color1;
     }
   }
 
-  #tr-head td span {
-    cursor: pointer;
-    padding: 3px;
-    position: relative
-  }
-
-  #tr-head td span .jmenu {
-    display: none
-  }
-
-  #tr-head td span.spanselected .jmenu {
-    display: block
-  }
-
-  #tr-head td span b {
-    font-weight: 400;
-    max-width: 130px;
-    overflow: hidden;
-    height: 16px;
-    line-height: 16px;
-    white-space: nowrap;
-    text-overflow: ellipsis
+  #tr-head {
+    .serial {
+      padding-left: 13px
+    }
+    td {
+      span {
+        cursor: pointer;
+        padding: 3px;
+        position: relative;
+        .jmenu {
+          display: none
+        }
+        &.spanselected {
+          display: block
+        }
+        b {
+          font-weight: 400;
+          max-width: 130px;
+          overflow: hidden;
+          height: 16px;
+          line-height: 16px;
+          white-space: nowrap;
+          text-overflow: ellipsis
+        }
+      }
+    }
   }
 
   #tr-head td > span:after, #tr-head td span b {
-    display: inline-block;
-    vertical-align: middle
+    @extend .vam;
   }
 
   #tr-head td > span:after {
@@ -446,22 +737,6 @@
     -ms-transform: rotate(180deg)
   }
 
-  .table-group td.error {
-    background-color: #fbcece
-  }
-
-  .table-group td {
-    height: 30px;
-    line-height: 30px;
-    border-bottom: 1px solid #eee;
-    padding-left: 6px;
-    border-right: 1px solid #eee
-  }
-
-  .table-group .item-createTime, .table-group .item-updateTime {
-    padding-right: 15px
-  }
-
   .error-group td > div, .list-group td > div {
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -473,13 +748,6 @@
 
   .table-group td[class^=item-props] > div {
     margin-right: 15px
-  }
-
-  #data-panel {
-    height: 350px;
-    position: relative;
-    border-top: 1px solid #ddd;
-    display: none;
   }
 
   .ps-container {
@@ -538,20 +806,19 @@
     height: 24px;
     line-height: 24px;
     padding: 0 15px;
+    text-align: center;
+    #error-current, #error-total {
+      color: red;
+    }
   }
 
-  .error-panel #error-current, .error-panel #error-total {
-    color: red;
-  }
   .alarm-badge {
     background-color: #ed5565 !important;
     color: #fff !important;
   }
 
-  .map-filter,
-  .map-message {
-    display: inline-block;
-    vertical-align: middle;
+  .map-filter, .map-message {
+    @extend .vam;
   }
 
   .map-message {
@@ -559,10 +826,11 @@
   }
 
   .map-footer {
-    background-color: #061b32;
+    background-color: $color2;
     .dropdown-menu {
       height: 470px;
       overflow-y: auto;
+      background: $color2;
     }
   }
 
@@ -615,12 +883,8 @@
     }
   }
 
-  .amap-info-content {
-    background: rgba(47, 55, 71, .8) !important;
-  }
-
   .info {
-    color: #333;
+    color: #333333;
     border: solid 1px silver;
     min-width: 209px;
   }
@@ -640,42 +904,13 @@
     color: #1ab394;
   }
 
-  #data-panel {
-    overflow-x: scroll !important;
-    height: 500px;
+  .amap-info-content {
+    background: rgba(47, 55, 71, .8) !important;
   }
 
   tr.list-group-item {
     padding: 0;
     border: 1px;
-  }
-
-  .table-group td {
-    padding: 0 6px;
-  }
-
-  .table-group .table-head th {
-    background-color: #f8f8f8;
-    height: 30px;
-    line-height: 30px;
-    border-bottom: 1px solid #eee;
-    padding: 0 6px;
-    border-right: 1px solid #eee;
-    font-weight: 400;
-  }
-
-  .table-group tbody tr:hover,
-  .table-group tbody tr.selected {
-    background: rgba(0, 145, 255, .05);
-    cursor: pointer;
-  }
-
-  .table-group tbody tr.selected {
-    color: #0091ff;
-  }
-
-  .table-group tbody tr.offline {
-    color: #aaaaaa;
   }
 
   .amap-ui-district-cluster-marker {
@@ -685,6 +920,30 @@
     border-radius: 5px;
     left: 0;
     top: 0;
+    &:after, &:before {
+      content: '';
+      display: block;
+      position: absolute;
+      width: 0;
+      height: 0;
+      border: solid rgba(0, 0, 0, 0);
+      border-width: 6px;
+      left: 13px;
+    }
+    &:before {
+      bottom: -13px;
+      border-top-color: #8e8e8e;
+    }
+    :after {
+      bottom: -12px;
+      border-top-color: #fffeef;
+    }
+    span {
+      padding: 3px 5px;
+      height: 20px;
+      line-height: 14px;
+      @extend .vam;
+    }
   }
 
   .amap-ui-district-cluster-container .overlay-title,
@@ -696,31 +955,6 @@
     position: absolute;
   }
 
-  .amap-ui-district-cluster-marker:after,
-  .amap-ui-district-cluster-marker:before {
-    content: '';
-    display: block;
-    position: absolute;
-    width: 0;
-    height: 0;
-    border: solid rgba(0, 0, 0, 0);
-    border-width: 6px;
-    left: 13px;
-  }
-
-  .amap-ui-district-cluster-marker:before {
-    bottom: -13px;
-    border-top-color: #8e8e8e;
-  }
-
-  .amap-ui-district-cluster-marker span {
-    vertical-align: middle;
-    padding: 3px 5px;
-    display: inline-block;
-    height: 20px;
-    line-height: 14px;
-  }
-
   .amap-ui-district-cluster-marker-title {
     border-radius: 5px 0 0 0;
   }
@@ -729,18 +963,12 @@
     background-color: #dc3912;
     color: #fff;
     border-radius: 0 5px 5px 0;
-  }
-
-  .amap-ui-district-cluster-marker-body.success {
-    background-color: #28a745;
+    &.success {
+      background-color: #28a745;
+    }
   }
 
   .amap-ui-district-cluster-marker.level_district .amap-ui-district-cluster-marker-body {
     background-color: #d47;
-  }
-
-  .amap-ui-district-cluster-marker:after {
-    bottom: -12px;
-    border-top-color: #fffeef;
   }
 </style>

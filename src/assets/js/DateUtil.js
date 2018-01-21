@@ -59,11 +59,11 @@ export default {
     if (!text) {
       return []
     }
-    let now = new Date(),
-      startFormat = 'yyyy-MM-dd 00:00:00',
-      endFormat = 'yyyy-MM-dd 23:59:59',
-      start = new Date(),
-      end = new Date()
+    let now = new Date()
+    let startFormat = 'yyyy-MM-dd 00:00:00'
+    let endFormat = 'yyyy-MM-dd 23:59:59'
+    let start = new Date()
+    let end = new Date()
 
     switch (text) {
       case 'today':
