@@ -1,9 +1,6 @@
-/*
- *
- *   INSPINIA - Responsive Admin Theme
- *   version 2.4
- *
-*/
+::-webkit-scrollbar {height:5px;}
+::-webkit-scrollbar-track {-webkit-box-shadow: inset 0 0 6px transparent; border-radius: 2px;}
+::-webkit-scrollbar-thumb {border-radius: 50px;background:#12355a; }
 
 h1,
 h2,
@@ -4103,7 +4100,7 @@ video {
 }
 
 .wrapper-content {
-    padding: 20px 10px 40px;
+    padding: 20px 0;
 }
 
 .title-action {
@@ -4443,11 +4440,10 @@ code {
     -moz-border-left-colors: none;
     -moz-border-right-colors: none;
     -moz-border-top-colors: none;
-    background-color: #ffffff;
-    border-color: #e7eaec;
+    border-color: #9fbad6;
     border-image: none;
     border-style: solid solid none;
-    border-width: 3px 0 0;
+    border-width: 1px 0 0;
     color: inherit;
     margin-bottom: 0;
     padding: 14px 15px 7px;
@@ -4455,10 +4451,9 @@ code {
 }
 
 .ibox-content {
-    background-color: #ffffff;
     color: inherit;
     padding: 15px 20px 20px 20px;
-    border-color: #e7eaec;
+    border-color: #9fbad6;
     border-image: none;
     border-style: solid solid none;
     border-width: 1px 0;
@@ -4566,7 +4561,7 @@ table.table-mail tr td {
 /* BACKGROUNDS */
 
 .gray-bg {
-    background-color: #f8f9fb;
+    background-color: #061b32;
 }
 
 .white-bg {

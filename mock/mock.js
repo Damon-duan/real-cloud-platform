@@ -211,7 +211,58 @@ const monitor = {
 
 const alarm = {
   'code': 1,
-  'data': [],
+  'data': [
+    {
+      'CH2O': '',
+      'CO': '',
+      'CO2': '',
+      'H2S': '',
+      'NH3': '',
+      'NO2': '',
+      'O2': '',
+      'O3': '',
+      'SO2': '',
+      'VOC': '',
+      'datetime': '2018-01-21 21:17:52',
+      'device_id': '2017102600100015',
+      'humidity': 'N',
+      'illum': '',
+      'name_sn': '\u897f\u5b89\u4e34\u6f7c\u533a\u5730\u94c19\u53f7\u7ebf\u5de5\u7a0bTJSG7\u68071',
+      'negoxygen': '',
+      'noise': 'N',
+      'p10': 'N',
+      'p25': 'T',
+      'photosynthesis': '',
+      'pressure': '',
+      'radiation': '',
+      'rainfall': '',
+      'soilhumidity': '',
+      'soiltemp': '',
+      'temp': 'N',
+      'tsp': '',
+      'ultravioletrays': '',
+      'winddirection': 'N',
+      'windspeed': 'N'
+    }
+  ],
+  'success': true
+}
+
+const getUserSetting = {
+  'code': 1,
+  'data': {
+    'active_ind': 1,
+    'avatar': '',
+    'create_dtm': '2017-08-18 15:27:28',
+    'fox': '',
+    'last_dtm': null,
+    'mail': 'test@163.com',
+    'name_sn': '\u6d4b\u8bd5\u8d26\u53f7',
+    'online_ind': 1,
+    'phone': '',
+    'role': 30,
+    'user_id': 356
+  },
   'success': true
 }
 
@@ -219,3 +270,4 @@ Mock.mock('/user/devices', /post|get/i, devices) // 当post或get请求到/news�
 Mock.mock('/data/rt', /post|get/i, rt) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
 Mock.mock('/monitor', /post|get/i, monitor) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
 Mock.mock('/monitor/alarm', /post|get/i, alarm) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据
+Mock.mock('/getUserSetting', /post|get/i, getUserSetting) // 当post或get请求到/news路由时Mock会拦截请求并返回上面的数据

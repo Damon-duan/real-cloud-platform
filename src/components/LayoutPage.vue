@@ -13,9 +13,7 @@
 
 <style scoped lang="scss">
   .container-fluid {
-    padding-top: 50px;
-    padding-left: 0;
-    padding-right: 0;
+    padding: 50px 0 0 0;
     position: relative;
   }
 </style>

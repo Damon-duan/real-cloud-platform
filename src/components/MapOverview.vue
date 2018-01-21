@@ -18,7 +18,7 @@
             <div class="error-panel">
               共有
               <span id="error-total">{{devices.length}}</span> 条数据,当前页有
-              <span id="error-current">{{this.getOnlinePoints().length}}</span> 条数据在线
+              <span id="error-current">{{getOnlinePoints().length}}</span> 条数据在线
             </div>
             <div id="data-panel" class="ps-container ps-theme-default">
 

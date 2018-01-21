@@ -76,8 +76,7 @@
   .navbar {
     position: fixed;
     width: 100%;
-    border-bottom: 1px solid #ddd;
-    background-color: #061b32;
+    background-color: $color2;
     -webkit-border-radius: 0;
     -moz-border-radius: 0;
     border-radius: 0;
