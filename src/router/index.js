@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 import LayoutPage from '@/components/LayoutPage'
+import Login from '@/components/login'
 import MapOverview from '@/components/MapOverview'
 import RealTimeData from '@/components/RealTimeData'
 import rank from '@/components/rank'
@@ -61,6 +62,11 @@ export default new Router({
           component: UserSetting
         }
       ]
+    },
+    {
+      name: 'login',
+      path: '/login',
+      component: Login
     }
   ]
 })

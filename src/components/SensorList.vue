@@ -25,6 +25,7 @@
 
 <script>
   import asenConfig from '@/assets/js/asenConfig'
+  import {eventBus} from '@/common'
   export default {
     data () {
       return {
@@ -40,11 +41,11 @@
       getDisplayVal: asenConfig.getDisplayValue,
       setSensor (sensor) {
         this.sensor = sensor
-        this.$dispatch('changeSensor', sensor)
+        eventBus.emit('changeSensor', sensor)
       },
       setDevice (device) {
         if (this.device.id !== device.id) {
-          this.$dispatch('changeDevice', device)
+          eventBus.emit('changeDevice', device)
         }
       },
       isSameSensor (sensor) {
@@ -54,20 +55,23 @@
         if (!this.device_id) {
           return
         }
-        return this.$http.get('/data/rt/' + this.device_id).then(result => {
-          if (result.data.success) {
-            this.setSensor(this.sensor)
-            this.setDevice(result.data.data.device)
+        return this.$http.get('/data/rt').then(res => {
+          let result = res.data
 
-            this.device = result.data.data.device
-            this.rt_data = result.data.data.rt_data ? result.data.data.rt_data : {}
+          if (result.success) {
+            this.setSensor(this.sensor)
+            this.setDevice(result.data.device)
+
+            this.device = result.data.device
+            this.rt_data = result.data.rt_data ? result.data.rt_data : {}
           }
         })
       },
-      loadUserDevice: function () {
-        return this.$http.get('/user/devices/').then(result => {
-          if (result.data.success) {
-            this.devices = result.data.data
+      loadUserDevice () {
+        return this.$http.get('/user/devices').then(res => {
+          let result = res.data
+          if (result.success) {
+            this.devices = result.data
             if (this.devices && this.devices[0]) {
               this.device_id = this.devices[0].device_id
             }
@@ -76,29 +80,30 @@
       }
     },
     watch: {
-      'devices': function () {
-        $('.chosen-select').chosen({no_results_text: '未找到您要查找的选项!'}).change(item => {
-          this.device_id = $(this).find('option:selected').map(function () {
+      'devices' () {
+        let _this = this
+        $('.chosen-select').chosen({no_results_text: '未找到您要查找的选项!'}).change(function () {
+          _this.device_id = $(this).find('option:selected').map(function () {
             return $(this).prop('id')
           }).get()[0]
+          console.log(_this.device_id)
         })
       },
-      'device_id': function () {
+      'device_id' () {
         this.loadSensorData()
       }
     },
     mounted () {
-      this.loadUserDevice().done(function () {
-        Vue.nextTick(function () {
-          $(".chosen-select").chosen({no_results_text: "未找到您要查找的选项!"});
+      this.loadUserDevice().then(() => {
+        this.$nextTick(() => {
+          $('.chosen-select').chosen({no_results_text: '未找到您要查找的选项!'})
         })
-
-      });
-      this.loadSensorData();
-      var $monitorItems = $('#monitorItems').on('click', 'tr', function () {
-        $monitorItems.find('.active').removeClass('active');
-        $(this).addClass('active');
-      });
+      })
+      this.loadSensorData()
+      let $monitorItems = $('#monitorItems').on('click', 'tr', function () {
+        $monitorItems.find('.active').removeClass('active')
+        $(this).addClass('active')
+      })
     }
   }
 </script>
@@ -106,50 +111,42 @@
 <style scoped lang="scss">
   .device-selector {
     padding: 10px;
-  }
-
-  .device-selector .chosen-container {
-    width: 80%;
-    display: block;
+    .chosen-container {
+      width: 80%;
+      display: block;
+    }
   }
 
   #monitorItems {
     text-align: center;
     overflow-y: auto;
-  }
-
-  #monitorItems tr {
-    cursor: pointer;
-  }
-
-  #monitorItems tr:hover {
-    background: rgba(0, 0, 0, .04);
-  }
-
-  #monitorItems tr.active {
-    background: rgba(0, 0, 0, .08);
-  }
-
-  #monitorItems .name {
-    text-align: left;
-    padding-left: 15px;
-    color: rgba(0, 0, 0, .75);
-  }
-
-  #monitorItems .value {
-    color: #1ab394;
-    text-align: right;
-  }
-
-  #monitorItems .unit {
-    color: #aaa;
-    text-align: right;
-    padding-right: 15px;
-  }
-
-  #monitorItems .iconfont {
-    font-size: 20px;
-    margin-right: 5px;
-    text-align: right;
+    tr {
+      cursor: pointer;
+      &:hover {
+        background: rgba(0, 0, 0, .04);
+      }
+      &.active {
+        background: rgba(0, 0, 0, .08);
+      }
+    }
+    .name {
+      text-align: left;
+      padding-left: 15px;
+      color: rgba(0, 0, 0, .75);
+    }
+    .value {
+      color: #1ab394;
+      text-align: right;
+    }
+    .unit {
+      color: #aaa;
+      text-align: right;
+      padding-right: 15px;
+    }
+    .iconfont {
+      font-size: 20px;
+      margin-right: 5px;
+      text-align: right;
+    }
   }
 </style>

@@ -149,6 +149,7 @@
   import baseInfo from './BaseInfo'
   import asenConfig from '@/assets/js/asenConfig'
   import dateUtil from '@/assets/js/DateUtil'
+  import {eventBus} from '@/common'
 
   let chart = null
   let $daterange
@@ -459,16 +460,16 @@
       }
     },
     beforeMount () {
-      this.$on('changeSensor', function (sensor) {
-        this.$broadcast('changeSensor', sensor)
+      eventBus.on('changeSensor', function (sensor) {
+        eventBus.emit('changeSensor', sensor)
         if (this.sensor !== sensor) {
           this.sensor = sensor
           this.getHistoryData()
         }
       })
 
-      this.$on('changeDevice', device => {
-        this.$broadcast('changeDevice', device)
+      eventBus.on('changeDevice', device => {
+        eventBus.emit('changeDevice', device)
         if (this.device_id !== device.id) {
           this.device_id = device.id
           this.getHistoryData()

@@ -57,6 +57,7 @@
 
 <script>
   import asenConfig from '@/assets/js/asenConfig'
+  import { eventBus } from '@/common'
   export default {
     data () {
       return {
@@ -75,22 +76,24 @@
         if (!this.device_id || !this.sensor) {
           return $.Deferred().reject()
         }
-        return this.$http.get('/data/rt/' + this.device_id + '/' + vm.sensor).then(function (result) {
-          if (result.data.success) {
-            this.rt_data = result.data.data
+        return this.$http.get('/data/rt/').then(res => {
+          let result = res.data
+          if (result.success) {
+            this.rt_data = result.data
+            console.log(this.rt_data)
           }
         })
       }
     },
     mounted () {
-      this.$on('changeSensor', function (sensor) {
+      eventBus.on('changeSensor', sensor => {
         if (this.sensor !== sensor) {
           this.sensor = sensor
           this.loadRealTimeData()
         }
       })
 
-      this.$on('changeDevice', function (device) {
+      eventBus.on('changeDevice', function (device) {
         if (this.device_id !== device.id) {
           this.device_id = device.id
           this.device = device

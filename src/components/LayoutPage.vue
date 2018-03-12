@@ -1,13 +1,17 @@
 <template>
-  <router-view></router-view>
+  <div class="app-wrapper">
+    <v-header></v-header>
+    <router-view></router-view>
+  </div>
 </template>
 
 <script>
+  import header from './header/header'
   export default {
-    data () {
-      return {}
-    },
-    methods: {}
+    name: 'app',
+    components: {
+      'v-header': header
+    }
   }
 </script>
 
